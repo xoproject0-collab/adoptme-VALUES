@@ -1,52 +1,47 @@
-import os
+# bot.py
 import asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import InputFile
+from aiogram import Bot, Dispatcher
+from aiogram.filters import Command
+from aiogram.types import Message
+
 from utils.api import get_pet_values
 from utils.ocr import extract_trade_text
 from utils.ai_analysis import analyze_trade
+
+import os
 from dotenv import load_dotenv
 
+# Загружаем .env
 load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Создаём бот и диспетчер (v2.25.2)
-bot = Bot(token=os.getenv("TELEGRAM_TOKEN"))
-dp = Dispatcher()
+# Создаем бот и диспетчер
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()  # В 3.x Bot НЕ передается сюда
 
+# Пример простого хэндлера /start
+@dp.message(Command(commands=["start"]))
+async def start_handler(message: Message):
+    await message.answer("Привет! Я бот.")
 
-# глобальные переменные для цен
-pet_values = {}
-
-async def update_values_loop():
-    global pet_values
-    while True:
-        pet_values = get_pet_values()
-        await asyncio.sleep(600)  # обновляем каждые 10 минут
-
-# Обработка фото трейдов
-@dp.message_handler(content_types=['photo'])
-async def handle_trade_photo(message: types.Message):
-    photo = message.photo[-1]
-    file = await bot.get_file(photo.file_id)
-    path = f"temp_{photo.file_id}.jpg"
-    await file.download(destination_file=path)
-
-    trade_text = extract_trade_text(path)
-    lines = [l.strip() for l in trade_text.splitlines() if l.strip()]
+# Пример хэндлера, использующего твои utils
+@dp.message(Command(commands=["trade"]))
+async def trade_handler(message: Message):
+    # Берем данные через твой модуль api
+    pet_values = get_pet_values()
     
-    if len(lines) >= 2:
-        my_items = lines[0].split(",")
-        their_items = lines[1].split(",")
-    else:
-        await message.reply("Не удалось распознать трейд. Попробуй другой скриншот.")
-        return
+    # Анализируем через AI
+    analysis_result = analyze_trade(pet_values)
+    
+    await message.answer(f"Результат анализа: {analysis_result}")
 
-    advice = analyze_trade(my_items, their_items, pet_values, pet_values)
-    await message.reply(advice)
+# Пример хэндлера для OCR (если нужно)
+@dp.message(Command(commands=["ocr"]))
+async def ocr_handler(message: Message):
+    # Берем текст через OCR из картинки (ссылка или файл)
+    text = extract_trade_text("sample_image.png")  # тут путь к картинке
+    await message.answer(f"Распознанный текст: {text}")
 
-async def main():
-    asyncio.create_task(update_values_loop())
-    await dp.start_polling()
-
+# Запуск бота
 if __name__ == "__main__":
-    asyncio.run(main())
+    dp.run_polling(bot)  # В 3.x бот передается сюда
