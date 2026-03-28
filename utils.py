@@ -1,32 +1,13 @@
-import openai
+import requests
 import os
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+API_BASE = os.getenv("API_BASE_URL")
 
-def analyze_trade(my_items, their_items, my_values, their_values):
-    """
-    my_items: список ваших предметов
-    their_items: список предметов другого игрока
-    my_values: словарь с валютами ваших питомцев
-    their_values: словарь с валютами их питомцев
-    """
-
-    prompt = f"""
-Я эксперт по трейдам Adopt Me.
-Я анализирую трейд:
-Я отдаю: {my_items} с валютами {my_values}
-Мне дают: {their_items} с валютами {their_values}
-
-Скажи:
-1. Стоит ли соглашаться?
-2. Обоснуй решение подробно.
-3. Укажи плюсы и минусы трейда.
-"""
-
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=300
-    )
-
-    return response.choices[0].message.content
+def get_pet_values():
+    """Берёт цены питомцев через API"""
+    url = f"{API_BASE}/values?sortBy=position&limit=100&page=1"
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        data = resp.json()
+        return {item['name']: item['value'] for item in data['data']}
+    return {}
