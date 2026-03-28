@@ -1,55 +1,46 @@
 import os
-import time
-import threading
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ContentType
-from aiogram.utils import executor
+from aiogram.types import InputFile
+from aiogram.filters import Command
+from aiogram.fsm.storage.memory import MemoryStorage
+from utils import analyze_trade
 from dotenv import load_dotenv
-from pets_values import update_values, get_pet_value
-from utils import ocr_image, analyze_trade
+from PIL import Image
+import pytesseract
 
 load_dotenv()
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher(storage=MemoryStorage())
 
-# Автообновление цен каждые 10 минут
-def auto_update():
-    while True:
-        update_values()
-        time.sleep(600)
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer("Привет! Пришли фото трейда, и я дам анализ AI.")
 
-threading.Thread(target=auto_update, daemon=True).start()
+@dp.message()
+async def handle_trade_photo(message: types.Message):
+    if message.photo:
+        photo = message.photo[-1]
+        file = await bot.get_file(photo.file_id)
+        path = f"downloads/{photo.file_id}.jpg"
+        await photo.download(destination_file=path)
 
-@dp.message_handler(commands=["start"])
-async def start(message: types.Message):
-    await message.reply("Привет! Пришли мне скрин трейда, и я скажу, выгодно ли соглашаться.")
+        # OCR для извлечения текста с фото (питомцы и валюты)
+        text = pytesseract.image_to_string(Image.open(path))
 
-@dp.message_handler(content_types=ContentType.PHOTO)
-async def photo_trade(message: types.Message):
-    # Сохраняем фото
-    photo = message.photo[-1]
-    file_path = f"{photo.file_id}.jpg"
-    await photo.download(file_path)
-    
-    # Распознаем текст
-    text = ocr_image(file_path)
-    
-    if not text.strip():
-        await message.reply("Не смог распознать текст на фото.")
-        return
-    
-    # Анализ AI
-    analysis = analyze_trade(text)
-    await message.reply(analysis)
+        # В реальном проекте здесь нужно парсить текст в структуры my_items, their_items
+        my_items = ["пример_питомца"]
+        their_items = ["пример_питомца"]
+        my_values = {"pet1": 50}
+        their_values = {"pet2": 40}
 
-@dp.message_handler(content_types=ContentType.TEXT)
-async def text_trade(message: types.Message):
-    # Анализ текста прямо через AI
-    analysis = analyze_trade(message.text)
-    await message.reply(analysis)
+        result = analyze_trade(my_items, their_items, my_values, their_values)
+        await message.answer(result)
+    else:
+        await message.answer("Пожалуйста, пришли фото трейда.")
 
 if __name__ == "__main__":
-    update_values()  # первое обновление при старте
-    executor.start_polling(dp, skip_updates=True)
+    import asyncio
+    from aiogram import F
+    asyncio.run(dp.start_polling(bot))
