@@ -1,30 +1,26 @@
-# Telegram бот
-aiogram==2.30.1
-
-# Асинхронные HTTP запросы
+aiogram==3.1.0
 aiohttp==3.8.6
 aiofiles==23.1.0
 aiosignal==1.4.0
-yarl==1.23.0
-multidict==6.7.1
+annotated-types==0.7.0
 async-timeout==4.0.3
-
-# Работа с изображениями и OCR
-pillow==12.1.1
-pytesseract==0.3.13
-
-# Внешние API и утилиты
-requests==2.33.0
-openai==0.27.8
-python-dotenv==1.2.2
-propcache==0.4.1
+attrs==26.1.0
+certifi==2026.2.25
+charset-normalizer==3.4.6
+frozenlist==1.8.0
+idna==3.11
 magic-filter==1.0.12
-
-# Доп. зависимости
+multidict==6.7.1
+openai==0.27.8
+packaging==26.0
+Pillow==12.1.1
+propcache==0.4.1
 pydantic==2.9.2
 pydantic-core==2.23.4
-packaging==26.0
+pytesseract==0.3.13
+python-dotenv==1.2.2
+requests==2.33.0
+tqdm==4.67.3
 typing-extensions==4.7.1
 urllib3==2.6.3
-certifi==2026.2.25
-attrs==26.1.0
+yarl==1.23.0
