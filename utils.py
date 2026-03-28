@@ -1,35 +1,32 @@
-from PIL import Image
-import pytesseract
-from pets_values import get_pet_value
 import openai
 import os
 
-openai.api_key = os.getenv("OPENAI_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Распознаем текст с картинки
-def ocr_image(image_path):
-    img = Image.open(image_path)
-    text = pytesseract.image_to_string(img)
-    return text
+def analyze_trade(my_items, their_items, my_values, their_values):
+    """
+    my_items: список ваших предметов
+    their_items: список предметов другого игрока
+    my_values: словарь с валютами ваших питомцев
+    their_values: словарь с валютами их питомцев
+    """
 
-# Анализ трейда через AI
-def analyze_trade(text):
-    """
-    text - распознанный текст с фото, формат:
-    'Я даю: dog, cat\nОн даёт: dragon, unicorn'
-    """
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{
-                "role": "system",
-                "content": "Ты эксперт в игре Adopt Me, оценивай выгодность трейдов, учитывай цены питомцев и их ликвидность."
-            },{
-                "role": "user",
-                "content": text
-            }],
-            temperature=0.3
-        )
-        return response.choices[0].message['content']
-    except Exception as e:
-        return f"Ошибка анализа трейда: {e}"
+    prompt = f"""
+Я эксперт по трейдам Adopt Me.
+Я анализирую трейд:
+Я отдаю: {my_items} с валютами {my_values}
+Мне дают: {their_items} с валютами {their_values}
+
+Скажи:
+1. Стоит ли соглашаться?
+2. Обоснуй решение подробно.
+3. Укажи плюсы и минусы трейда.
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=300
+    )
+
+    return response.choices[0].message.content
