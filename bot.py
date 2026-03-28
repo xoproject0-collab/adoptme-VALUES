@@ -16,7 +16,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Создаем бот и диспетчер
-bot = Bot(8739109558:AAFFfBXgy-IxpN-s6-X1IlZFR-mJHUg87G4)
+bot = Bot("8739109558:AAFFfBXgy-IxpN-s6-X1IlZFR-mJHUg87G4")
 dp = Dispatcher()  # В 3.x Bot НЕ передается сюда
 
 # Пример простого хэндлера /start
