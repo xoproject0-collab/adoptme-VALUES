@@ -8,9 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()  # ⚡ теперь без аргументов
+bot = Bot(token=os.getenv("TELEGRAM_TOKEN"))
+dp = Dispatcher(bot)
 
 # глобальные переменные для цен
 pet_values = {}
@@ -26,23 +25,19 @@ async def handle_trade_photo(message: types.Message):
     photo = message.photo[-1]
     file = await bot.get_file(photo.file_id)
     path = f"temp_{photo.file_id}.jpg"
-    await file.download(destination_file=path)
+    await file.download(path)
 
     trade_text = extract_trade_text(path)
     lines = [l.strip() for l in trade_text.splitlines() if l.strip()]
-    if len(lines) < 2:
-        await message.reply("Не удалось распознать трейд 😢")
-        return
-
-    my_items = lines[0].split(",")  # имитация обработки
-    their_items = lines[1].split(",")
+    my_items = lines[0].split(",") if len(lines) > 0 else []
+    their_items = lines[1].split(",") if len(lines) > 1 else []
 
     advice = analyze_trade(my_items, their_items, pet_values, pet_values)
     await message.reply(advice)
 
 async def main():
     asyncio.create_task(update_values_loop())
-    await dp.start_polling(bot)  # ⚡ передаём бот сюда, не в Dispatcher()
+    await dp.start_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
