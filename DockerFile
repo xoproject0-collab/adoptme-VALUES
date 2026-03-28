@@ -1,0 +1,18 @@
+# Используем Python 3.13
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Скопировать зависимости
+COPY requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# Копируем проект
+COPY . .
+
+# Создаем папку для фото
+RUN mkdir downloads
+
+# Запуск бота
+CMD ["python", "bot.py"]
