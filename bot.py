@@ -11,6 +11,7 @@ load_dotenv()
 
 # Создаём бот и диспетчер (v2.25.2)
 bot = Bot(token=os.getenv("TELEGRAM_TOKEN"))
+dp = Dispatcher()
 
 
 # глобальные переменные для цен
