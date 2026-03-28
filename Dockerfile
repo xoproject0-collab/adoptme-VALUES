@@ -1,15 +1,19 @@
+# Используем стабильный Python 3.12
 FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y \
-    build-essential libjpeg-dev zlib1g-dev \
-    libtiff-dev libfreetype6-dev liblcms2-dev \
-    libwebp-dev tcl8.6-dev tk8.6-dev python3-tk \
-    libharfbuzz-dev libfribidi-dev libxcb1-dev \
- && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
+
+# Копируем файлы зависимостей
 COPY requirements.txt .
-RUN pip install --upgrade pip
+
+# Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем весь проект
 COPY . .
+
+# Переменная окружения для Telegram
+ENV TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+
+# Запуск бота
 CMD ["python", "bot.py"]
