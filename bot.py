@@ -10,7 +10,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()  # ⚡ теперь без аргументов
 
 # глобальные переменные для цен
 pet_values = {}
@@ -42,7 +42,7 @@ async def handle_trade_photo(message: types.Message):
 
 async def main():
     asyncio.create_task(update_values_loop())
-    await dp.start_polling()
+    await dp.start_polling(bot)  # ⚡ передаём бот сюда, не в Dispatcher()
 
 if __name__ == "__main__":
     asyncio.run(main())
